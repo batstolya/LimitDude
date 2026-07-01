@@ -63,6 +63,19 @@ enum PixelDudeMode {
             return "\(usage). \(reset)."
         }
     }
+
+    var taskDurationText: String? {
+        switch self {
+        case .recovery(let reading):
+            guard reading.reason.hasPrefix("Task done.") else { return nil }
+            return reading.reason
+                .split(separator: "\n")
+                .first { $0.hasPrefix("Duration: ") }
+                .map { "last task \($0.replacingOccurrences(of: "Duration: ", with: ""))" }
+        case .warning:
+            return nil
+        }
+    }
 }
 
 private extension LimitReading {
@@ -504,10 +517,10 @@ final class PixelDudeView: NSView {
     private func drawAvailableSign(centerX: CGFloat, baseY: CGFloat) {
         let reveal = easeOut(min(max(CGFloat(phase / 0.55), 0), 1))
         let wave = sin(max(phase - 0.2, 0) * 8.0) * 0.11
-        let signSize = NSSize(width: 260, height: 54)
+        let signSize = NSSize(width: 270, height: mode.taskDurationText == nil ? 54 : 62)
         let hand = NSPoint(x: centerX + 66, y: baseY + 68)
         let signOrigin = NSPoint(
-            x: centerX - 130,
+            x: centerX - signSize.width / 2,
             y: baseY + 86 - (1 - reveal) * 54
         )
 
@@ -540,12 +553,25 @@ final class PixelDudeView: NSView {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineBreakMode = .byClipping
+        let hasDuration = mode.taskDurationText != nil
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.monospacedSystemFont(ofSize: 20, weight: .heavy),
+            .font: NSFont.monospacedSystemFont(ofSize: hasDuration ? 19 : 20, weight: .heavy),
             .foregroundColor: NSColor.white,
             .paragraphStyle: paragraph
         ]
-        mode.signText.draw(in: signRect.insetBy(dx: 10, dy: 14), withAttributes: attrs)
+        let titleRect = hasDuration
+            ? NSRect(x: signRect.minX + 10, y: signRect.minY + 22, width: signRect.width - 20, height: 28)
+            : signRect.insetBy(dx: 10, dy: 14)
+        mode.signText.draw(in: titleRect, withAttributes: attrs)
+
+        if let taskDurationText = mode.taskDurationText {
+            let durationAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedSystemFont(ofSize: 8, weight: .bold),
+                .foregroundColor: NSColor(calibratedWhite: 1, alpha: 0.86),
+                .paragraphStyle: paragraph
+            ]
+            taskDurationText.draw(in: NSRect(x: signRect.minX + 12, y: signRect.minY + 8, width: signRect.width - 24, height: 12), withAttributes: durationAttrs)
+        }
 
         NSGraphicsContext.restoreGraphicsState()
     }

@@ -60,7 +60,7 @@ private func runChecks() {
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(1)).isEmpty, "Growing rollout file should only mark task active")
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(4)).isEmpty, "Active task should not complete before idle window")
     expect(
-        taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(7)) == [CodexTaskCompletion(id: "thread-1", title: "Build app")],
+        taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(7)) == [CodexTaskCompletion(id: "thread-1", title: "Build app", duration: 6)],
         "Active task should complete once rollout file is idle long enough"
     )
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(12)).isEmpty, "Completed task must not notify twice without new activity")
@@ -108,7 +108,7 @@ private func runChecks() {
         completionMarker: "long-run-marker"
     )
     expect(
-        markerMonitor.ingest([markerCompletedAfterLongRun], now: start.addingTimeInterval(41)) == [CodexTaskCompletion(id: "thread-2", title: "Finish turn")],
+        markerMonitor.ingest([markerCompletedAfterLongRun], now: start.addingTimeInterval(41)) == [CodexTaskCompletion(id: "thread-2", title: "Finish turn", duration: 31)],
         "Long Codex task_complete marker should trigger an available notification"
     )
     expect(markerMonitor.ingest([markerCompletedAfterLongRun], now: start.addingTimeInterval(42)).isEmpty, "Same completion marker must not notify twice")

@@ -177,7 +177,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func simulateTaskDone() {
         log("simulateTaskDone")
-        showTaskDone(CodexTaskCompletion(id: "simulated", title: "Demo Codex task"))
+        showTaskDone(CodexTaskCompletion(id: "simulated", title: "Demo Codex task", duration: 42))
     }
 
     @objc private func simulateLimited() {
@@ -249,10 +249,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {
-        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\n\(completion.title)")
+        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))\n\(completion.title)")
         updateStatus(reading)
         log("showTaskDoneOverlay \(completion.id)")
         overlay.show(mode: .recovery(reading), showDetails: false, forceAttention: true)
+    }
+
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let seconds = max(0, Int(duration.rounded()))
+        let minutes = seconds / 60
+        let remainingSeconds = seconds % 60
+
+        if minutes == 0 {
+            return "\(remainingSeconds)s"
+        }
+
+        if remainingSeconds == 0 {
+            return "\(minutes)m"
+        }
+
+        return "\(minutes)m \(remainingSeconds)s"
     }
 
     private func updateStatus(_ reading: LimitReading) {
@@ -356,7 +372,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func runDemoTaskDone() {
         log("runDemoTaskDone")
-        showTaskDone(CodexTaskCompletion(id: "demo-task", title: "Demo Codex task"))
+        showTaskDone(CodexTaskCompletion(id: "demo-task", title: "Demo Codex task", duration: 42))
     }
 
     @objc private func runDemoClick() {

@@ -21,10 +21,12 @@ public struct CodexTaskSnapshot: Equatable {
 public struct CodexTaskCompletion: Equatable {
     public let id: String
     public let title: String
+    public let duration: TimeInterval
 
-    public init(id: String, title: String) {
+    public init(id: String, title: String, duration: TimeInterval = 0) {
         self.id = id
         self.title = title
+        self.duration = duration
     }
 }
 
@@ -96,7 +98,7 @@ public final class CodexTaskMonitor {
                completionMarker != tracked.completionMarker,
                tasks[snapshot.id] != nil {
                 if shouldNotifyCompletion(for: tracked, now: now) {
-                    completions.append(CodexTaskCompletion(id: snapshot.id, title: snapshot.title))
+                    completions.append(CodexTaskCompletion(id: snapshot.id, title: snapshot.title, duration: completionDuration(for: tracked, now: now)))
                 }
                 tracked.completionMarker = completionMarker
                 tracked.lastChangedAt = now
@@ -109,7 +111,7 @@ public final class CodexTaskMonitor {
 
             let isIdleAfterActivity = tracked.hasBeenActive && !tracked.didNotify && now.timeIntervalSince(tracked.lastChangedAt) >= idleSecondsBeforeDone
             if isIdleAfterActivity && shouldNotifyCompletion(for: tracked, now: now) {
-                completions.append(CodexTaskCompletion(id: snapshot.id, title: snapshot.title))
+                completions.append(CodexTaskCompletion(id: snapshot.id, title: snapshot.title, duration: completionDuration(for: tracked, now: now)))
                 tracked.didNotify = true
                 tracked.hasBeenActive = false
                 tracked.activeStartedAt = nil
@@ -124,5 +126,10 @@ public final class CodexTaskMonitor {
     private func shouldNotifyCompletion(for task: TrackedTask, now: Date) -> Bool {
         guard let activeStartedAt = task.activeStartedAt else { return false }
         return now.timeIntervalSince(activeStartedAt) >= minimumActiveSecondsBeforeNotify
+    }
+
+    private func completionDuration(for task: TrackedTask, now: Date) -> TimeInterval {
+        guard let activeStartedAt = task.activeStartedAt else { return 0 }
+        return max(0, now.timeIntervalSince(activeStartedAt))
     }
 }
