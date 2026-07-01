@@ -41,13 +41,11 @@ public final class CodexTaskMonitor {
         var completionMarker: String?
     }
 
-    private let idleSecondsBeforeDone: TimeInterval
     private let minimumActiveSecondsBeforeNotify: TimeInterval
     private var didSeedBaseline = false
     private var tasks: [String: TrackedTask] = [:]
 
     public init(idleSecondsBeforeDone: TimeInterval = 25, minimumActiveSecondsBeforeNotify: TimeInterval = 30) {
-        self.idleSecondsBeforeDone = idleSecondsBeforeDone
         self.minimumActiveSecondsBeforeNotify = minimumActiveSecondsBeforeNotify
     }
 
@@ -107,14 +105,6 @@ public final class CodexTaskMonitor {
                 tracked.didNotify = true
                 tasks[snapshot.id] = tracked
                 continue
-            }
-
-            let isIdleAfterActivity = tracked.hasBeenActive && !tracked.didNotify && now.timeIntervalSince(tracked.lastChangedAt) >= idleSecondsBeforeDone
-            if isIdleAfterActivity && shouldNotifyCompletion(for: tracked, now: now) {
-                completions.append(CodexTaskCompletion(id: snapshot.id, title: snapshot.title, duration: completionDuration(for: tracked, now: now)))
-                tracked.didNotify = true
-                tracked.hasBeenActive = false
-                tracked.activeStartedAt = nil
             }
 
             tasks[snapshot.id] = tracked

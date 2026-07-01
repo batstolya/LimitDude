@@ -65,11 +65,8 @@ private func runChecks() {
     )
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(1)).isEmpty, "Growing rollout file should only mark task active")
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(4)).isEmpty, "Active task should not complete before idle window")
-    expect(
-        taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(7)) == [CodexTaskCompletion(id: "thread-1", title: "Build app", duration: 6)],
-        "Active task should complete once rollout file is idle long enough"
-    )
-    expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(12)).isEmpty, "Completed task must not notify twice without new activity")
+    expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(7)).isEmpty, "Silent active task must not complete without a task_complete marker")
+    expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(45)).isEmpty, "Long silent command must not show Codex available before Codex reports task_complete")
 
     let markerMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 30, minimumActiveSecondsBeforeNotify: 30)
     let markerBaseline = CodexTaskSnapshot(
