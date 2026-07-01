@@ -27,10 +27,10 @@
 - Consumes: `PixelDudeMode.detailText` and existing `drawBubble(origin:text:width:height:)`.
 - Produces: colored rendering for percentage tokens in Codex limit detail bubbles.
 
-- [ ] Add a helper that detects integer percentage tokens in limit text.
-- [ ] Add a helper that maps remaining percent values to red/yellow/green `NSColor`.
-- [ ] Update `drawBubble` to use attributed drawing when text contains Codex limit percentages.
-- [ ] Verify with `swift build`.
+- [x] Add a helper that detects integer percentage tokens in limit text.
+- [x] Add a helper that maps remaining percent values to red/yellow/green `NSColor`.
+- [x] Update `drawBubble` to use attributed drawing when text contains Codex limit percentages.
+- [x] Verify with `swift build`.
 
 ### Task 2: README and Screenshots
 
@@ -43,9 +43,9 @@
 - Consumes: provided screenshot files from the current Codex message and previous overlay screenshot.
 - Produces: a README with screenshot links and practical install/build usage.
 
-- [ ] Copy screenshots into `docs/assets/`.
-- [ ] Replace README with sections: overview, screenshots, capabilities, install, developer commands, notes.
-- [ ] Verify image links point to existing files.
+- [x] Copy screenshots into `docs/assets/`.
+- [x] Replace README with sections: overview, screenshots, capabilities, install, developer commands, notes.
+- [x] Verify image links point to existing files.
 
 ### Task 3: macOS App Bundle Packaging
 
@@ -57,10 +57,10 @@
 - Consumes: SwiftPM release build output at `.build/release/LimitDude`.
 - Produces: `dist/LimitDude.app` and `dist/LimitDude.zip`.
 
-- [ ] Add `dist/` to `.gitignore`.
-- [ ] Add an executable script that builds release, creates bundle folders, writes `Info.plist`, copies the executable, and zips the app.
-- [ ] Run `scripts/build-app.sh`.
-- [ ] Verify `dist/LimitDude.app/Contents/MacOS/LimitDude` exists and is executable.
+- [x] Add `dist/` to `.gitignore`.
+- [x] Add an executable script that builds release, creates bundle folders, writes `Info.plist`, copies the executable, and zips the app.
+- [x] Run `scripts/build-app.sh`.
+- [x] Verify `dist/LimitDude.app/Contents/MacOS/LimitDude` exists and is executable.
 
 ### Task 4: Final Verification
 
@@ -71,8 +71,8 @@
 - Consumes: completed tasks 1-3.
 - Produces: pushed GitHub commit with the mini-release.
 
-- [ ] Run `swift run LimitDudeCoreChecks`.
-- [ ] Run `swift build`.
-- [ ] Run `scripts/build-app.sh`.
-- [ ] Inspect `git diff`.
-- [ ] Commit and push.
+- [x] Run `swift run LimitDudeCoreChecks`.
+- [x] Run `swift build`.
+- [x] Run `scripts/build-app.sh`.
+- [x] Inspect `git diff`.
+- [x] Commit and push.

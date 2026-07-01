@@ -28,6 +28,12 @@ private func runChecks() {
     expect(warning.state == .warning, "Expected 80 percent or higher usage to classify as warning")
     expect(warning.usagePercent == 82, "Expected warning to preserve usage percent")
     expect(warning.resetText == "7:00 PM", "Expected warning to extract reset time")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 4) == .critical, "Expected 4 percent remaining to be critical")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 20) == .critical, "Expected 20 percent remaining to be critical")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 21) == .caution, "Expected 21 percent remaining to be caution")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 50) == .caution, "Expected 50 percent remaining to be caution")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 51) == .healthy, "Expected 51 percent remaining to be healthy")
+    expect(RemainingLimitTone.tone(forRemainingPercent: 100) == .healthy, "Expected 100 percent remaining to be healthy")
 
     let monitor = LimitRecoveryMonitor()
     expect(monitor.ingest(.available()) == .none, "Initial available reading must not trigger animation")

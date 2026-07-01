@@ -695,7 +695,47 @@ final class PixelDudeView: NSView {
             .foregroundColor: NSColor.black,
             .paragraphStyle: paragraph
         ]
-        text.draw(in: rect.insetBy(dx: 8, dy: 7), withAttributes: attributes)
+        let textRect = rect.insetBy(dx: 8, dy: 7)
+        if drawColoredLimitTextIfNeeded(text, in: textRect, attributes: attributes) {
+            return
+        }
+
+        text.draw(in: textRect, withAttributes: attributes)
+    }
+
+    private func drawColoredLimitTextIfNeeded(_ text: String, in rect: NSRect, attributes: [NSAttributedString.Key: Any]) -> Bool {
+        guard text.contains("%"),
+              text.contains("Left:") || text.contains("Codex left:") || text.contains("Codex limits:") else {
+            return false
+        }
+
+        let attributed = NSMutableAttributedString(string: text, attributes: attributes)
+        let pattern = #"(\d{1,3})%"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
+        let fullRange = NSRange(location: 0, length: attributed.length)
+        regex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+            guard let match,
+                  let percentRange = Range(match.range(at: 1), in: text),
+                  let percent = Int(text[percentRange]) else {
+                return
+            }
+
+            attributed.addAttribute(.foregroundColor, value: color(for: RemainingLimitTone.tone(forRemainingPercent: percent)), range: match.range)
+        }
+
+        attributed.draw(in: rect)
+        return true
+    }
+
+    private func color(for tone: RemainingLimitTone) -> NSColor {
+        switch tone {
+        case .critical:
+            return NSColor(calibratedRed: 0.86, green: 0.12, blue: 0.10, alpha: 1)
+        case .caution:
+            return NSColor(calibratedRed: 0.86, green: 0.58, blue: 0.05, alpha: 1)
+        case .healthy:
+            return NSColor(calibratedRed: 0.06, green: 0.52, blue: 0.20, alpha: 1)
+        }
     }
 
     private func drawShadow(centerX: CGFloat, y: CGFloat, scale: CGFloat) {
