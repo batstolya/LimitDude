@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let taskMonitor = CodexTaskMonitor()
     private let provider = CodexRateLimitProvider()
     private let taskProvider = CodexTaskSnapshotProvider()
+    private let setupProvider = SetupStatusProvider()
     private let overlay = PixelDudeOverlay()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var launcherWindow: NSWindow?
@@ -63,6 +64,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         detailsMenuItem = details
         menu.addItem(details)
 
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Setup Status", action: #selector(showSetupStatus), keyEquivalent: "s"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Check Codex Now", action: #selector(checkNow), keyEquivalent: "r"))
         menu.addItem(NSMenuItem(title: "Show Dude", action: #selector(showDude), keyEquivalent: "d"))
@@ -151,6 +154,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 self.isCheckingLimits = false
                 self.handle(reading)
+            }
+        }
+    }
+
+    @objc private func showSetupStatus() {
+        log("showSetupStatus")
+        detailsMenuItem?.title = "Checking setup..."
+
+        DispatchQueue.global(qos: .utility).async { [setupProvider] in
+            let report = setupProvider.read()
+            DispatchQueue.main.async { [weak self] in
+                self?.detailsMenuItem?.title = report.hasMissingRequiredSetup ? "Setup needs attention" : "Setup looks ready"
+                self?.presentSetupReport(report)
             }
         }
     }
@@ -246,6 +262,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .checking, .unknown:
             overlay.show(mode: .warning(.warning(reason: reading.reason, usagePercent: nil, resetText: reading.resetText)))
         }
+    }
+
+    private func presentSetupReport(_ report: SetupReport) {
+        let alert = NSAlert()
+        alert.messageText = report.hasMissingRequiredSetup ? "LimitDude setup needs attention" : "LimitDude setup looks ready"
+        alert.informativeText = report.plainText
+        alert.alertStyle = report.hasMissingRequiredSetup ? .warning : .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {

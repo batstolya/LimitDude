@@ -35,6 +35,16 @@ private func runChecks() {
     expect(RemainingLimitTone.tone(forRemainingPercent: 51) == .healthy, "Expected 51 percent remaining to be healthy")
     expect(RemainingLimitTone.tone(forRemainingPercent: 100) == .healthy, "Expected 100 percent remaining to be healthy")
 
+    let setupReport = SetupReport(checks: [
+        SetupCheck(title: "Codex.app", state: .ok, detail: "Found at /Applications/Codex.app"),
+        SetupCheck(title: "Codex login", state: .missing, detail: "Rate limits are not readable", action: "Open Codex and sign in")
+    ])
+    expect(setupReport.hasMissingRequiredSetup, "Setup report should flag missing setup")
+    expect(
+        setupReport.plainText.contains("[MISSING] Codex login: Rate limits are not readable\nAction: Open Codex and sign in"),
+        "Setup report should include missing check action"
+    )
+
     let monitor = LimitRecoveryMonitor()
     expect(monitor.ingest(.available()) == .none, "Initial available reading must not trigger animation")
     expect(monitor.ingest(.warning(usagePercent: 82, resetText: "7:00 PM")) == .warning(.warning(usagePercent: 82, resetText: "7:00 PM")), "First warning reading must trigger warning animation")

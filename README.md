@@ -15,6 +15,7 @@ LimitDude watches Codex from the menu bar and shows a pixel character overlay wh
 - Watches active Codex tasks and shows `Codex is available` when a long task finishes.
 - Ignores quick answers so short replies do not spam the screen.
 - Shows how long the last completed task ran.
+- Includes `Setup Status` to explain what is missing on a new Mac.
 - Provides menu actions for manual checks and demo overlays.
 
 ![LimitDude limit overlay](docs/assets/limitdude-limits.png)
