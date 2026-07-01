@@ -39,7 +39,7 @@ private func runChecks() {
     expect(monitor.ingest(.available()) == .none, "Repeated available reading must not trigger animation")
     expect(monitor.ingest(.unknown(reason: "Claude is closed")) == .none, "Unknown reading must not trigger animation")
 
-    let taskMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 5)
+    let taskMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 5, minimumActiveSecondsBeforeNotify: 0)
     let start = Date(timeIntervalSince1970: 100)
     let firstSnapshot = CodexTaskSnapshot(
         id: "thread-1",
@@ -65,7 +65,7 @@ private func runChecks() {
     )
     expect(taskMonitor.ingest([activeSnapshot], now: start.addingTimeInterval(12)).isEmpty, "Completed task must not notify twice without new activity")
 
-    let markerMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 30)
+    let markerMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 30, minimumActiveSecondsBeforeNotify: 30)
     let markerBaseline = CodexTaskSnapshot(
         id: "thread-2",
         title: "Finish turn",
@@ -85,10 +85,33 @@ private func runChecks() {
         completionMarker: "new-marker"
     )
     expect(
-        markerMonitor.ingest([markerCompleted], now: start.addingTimeInterval(1)) == [CodexTaskCompletion(id: "thread-2", title: "Finish turn")],
-        "New Codex task_complete marker should trigger immediately"
+        markerMonitor.ingest([markerCompleted], now: start.addingTimeInterval(2)).isEmpty,
+        "Fast Codex task_complete marker must not trigger an available notification"
     )
-    expect(markerMonitor.ingest([markerCompleted], now: start.addingTimeInterval(2)).isEmpty, "Same completion marker must not notify twice")
+
+    let markerStillActive = CodexTaskSnapshot(
+        id: "thread-2",
+        title: "Finish turn",
+        rolloutPath: "/tmp/thread-2.jsonl",
+        fileSize: 280,
+        modifiedAt: start.addingTimeInterval(10),
+        completionMarker: "new-marker"
+    )
+    expect(markerMonitor.ingest([markerStillActive], now: start.addingTimeInterval(10)).isEmpty, "Continued rollout growth should keep task active")
+
+    let markerCompletedAfterLongRun = CodexTaskSnapshot(
+        id: "thread-2",
+        title: "Finish turn",
+        rolloutPath: "/tmp/thread-2.jsonl",
+        fileSize: 320,
+        modifiedAt: start.addingTimeInterval(41),
+        completionMarker: "long-run-marker"
+    )
+    expect(
+        markerMonitor.ingest([markerCompletedAfterLongRun], now: start.addingTimeInterval(41)) == [CodexTaskCompletion(id: "thread-2", title: "Finish turn")],
+        "Long Codex task_complete marker should trigger an available notification"
+    )
+    expect(markerMonitor.ingest([markerCompletedAfterLongRun], now: start.addingTimeInterval(42)).isEmpty, "Same completion marker must not notify twice")
 }
 
 runChecks()
