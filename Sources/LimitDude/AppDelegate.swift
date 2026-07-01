@@ -111,7 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.ignoresMouseEvents = false
         window.hidesOnDeactivate = false
 
-        let button = NSButton(frame: NSRect(origin: .zero, size: size))
+        let button = DraggableLauncherButton(frame: NSRect(origin: .zero, size: size))
         button.title = "LD"
         button.image = makeDudeIcon(size: 24)
         button.imagePosition = .imageLeft
@@ -397,5 +397,67 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         handle.seekToEndOfFile()
         handle.write(data)
         try? handle.close()
+    }
+}
+
+private final class DraggableLauncherButton: NSButton {
+    private var mouseDownLocationInWindow: NSPoint?
+    private var windowFrameAtMouseDown: NSRect?
+    private var didDrag = false
+    private let dragThreshold: CGFloat = 3
+
+    override func mouseDown(with event: NSEvent) {
+        mouseDownLocationInWindow = event.locationInWindow
+        windowFrameAtMouseDown = window?.frame
+        didDrag = false
+        super.mouseDown(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let window,
+              let mouseDownLocationInWindow,
+              let windowFrameAtMouseDown else {
+            super.mouseDragged(with: event)
+            return
+        }
+
+        let currentScreenLocation = NSEvent.mouseLocation
+        let origin = NSPoint(
+            x: currentScreenLocation.x - mouseDownLocationInWindow.x,
+            y: currentScreenLocation.y - mouseDownLocationInWindow.y
+        )
+        let deltaX = origin.x - windowFrameAtMouseDown.origin.x
+        let deltaY = origin.y - windowFrameAtMouseDown.origin.y
+        if abs(deltaX) > dragThreshold || abs(deltaY) > dragThreshold {
+            didDrag = true
+        }
+
+        window.setFrameOrigin(clampedOrigin(origin, for: window))
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        defer {
+            mouseDownLocationInWindow = nil
+            windowFrameAtMouseDown = nil
+            didDrag = false
+        }
+
+        guard didDrag else {
+            super.mouseUp(with: event)
+            return
+        }
+    }
+
+    private func clampedOrigin(_ origin: NSPoint, for window: NSWindow) -> NSPoint {
+        guard let screen = window.screen ?? NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main else {
+            return origin
+        }
+
+        let frame = screen.visibleFrame
+        let size = window.frame.size
+        return NSPoint(
+            x: min(max(origin.x, frame.minX), frame.maxX - size.width),
+            y: min(max(origin.y, frame.minY), frame.maxY - size.height)
+        )
     }
 }
