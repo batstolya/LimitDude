@@ -124,6 +124,40 @@ private func runChecks() {
     )
     expect(markerMonitor.ingest([markerStillActive], now: start.addingTimeInterval(10)).isEmpty, "Continued rollout growth should keep task active")
 
+    let staleMTimeMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 30, minimumActiveSecondsBeforeNotify: 30)
+    let staleMTimeBaseline = CodexTaskSnapshot(
+        id: "thread-3",
+        title: "Already running task",
+        rolloutPath: "/tmp/thread-3.jsonl",
+        fileSize: 200,
+        modifiedAt: start,
+        completionMarker: "old-marker"
+    )
+    expect(staleMTimeMonitor.ingest([staleMTimeBaseline], now: start.addingTimeInterval(2_000)).isEmpty, "Initial stale task baseline must not notify")
+
+    let staleMTimeActive = CodexTaskSnapshot(
+        id: "thread-3",
+        title: "Already running task",
+        rolloutPath: "/tmp/thread-3.jsonl",
+        fileSize: 240,
+        modifiedAt: start,
+        completionMarker: "old-marker"
+    )
+    expect(staleMTimeMonitor.ingest([staleMTimeActive], now: start.addingTimeInterval(2_010)).isEmpty, "First observed growth should mark task active from observation time")
+
+    let staleMTimeCompleted = CodexTaskSnapshot(
+        id: "thread-3",
+        title: "Already running task",
+        rolloutPath: "/tmp/thread-3.jsonl",
+        fileSize: 260,
+        modifiedAt: start.addingTimeInterval(2_040),
+        completionMarker: "new-marker"
+    )
+    expect(
+        staleMTimeMonitor.ingest([staleMTimeCompleted], now: start.addingTimeInterval(2_045)) == [CodexTaskCompletion(id: "thread-3", title: "Already running task", duration: 35)],
+        "Completion duration should start from first observed growth, not stale rollout mtime"
+    )
+
     let markerCompletedAfterLongRun = CodexTaskSnapshot(
         id: "thread-2",
         title: "Finish turn",

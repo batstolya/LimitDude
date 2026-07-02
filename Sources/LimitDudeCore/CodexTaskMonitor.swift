@@ -84,7 +84,7 @@ public final class CodexTaskMonitor {
             tracked.title = snapshot.title
             if snapshot.fileSize > tracked.fileSize {
                 if !tracked.hasBeenActive {
-                    tracked.activeStartedAt = snapshot.modifiedAt
+                    tracked.activeStartedAt = now
                 }
                 tracked.fileSize = snapshot.fileSize
                 tracked.lastChangedAt = now

@@ -34,7 +34,7 @@ enum ReadmeAssetRenderer {
     }
 
     private static func renderTaskDoneGIF(to url: URL) throws {
-        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: 42s")
+        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: 42s\nReset: 1h 18m")
         try renderGIF(
             to: url,
             frameCount: 132,

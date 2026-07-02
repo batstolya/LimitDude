@@ -186,10 +186,19 @@ public final class CodexRateLimitProvider: @unchecked Sendable {
 
     private func formatReset(epochSeconds: TimeInterval?) -> String? {
         guard let epochSeconds else { return nil }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter.string(from: Date(timeIntervalSince1970: epochSeconds))
+        let seconds = max(0, Int(Date(timeIntervalSince1970: epochSeconds).timeIntervalSinceNow.rounded()))
+        let hours = seconds / 3_600
+        let minutes = (seconds % 3_600) / 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+
+        if minutes > 0 {
+            return "\(minutes)m"
+        }
+
+        return "<1m"
     }
 }
 

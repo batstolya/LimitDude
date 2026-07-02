@@ -77,10 +77,18 @@ enum PixelDudeMode {
         switch self {
         case .recovery(let reading):
             guard reading.reason.hasPrefix("Task done.") else { return nil }
-            return reading.reason
+            let duration = reading.reason
                 .split(separator: "\n")
                 .first { $0.hasPrefix("Duration: ") }
                 .map { "last task \($0.replacingOccurrences(of: "Duration: ", with: ""))" }
+            let reset = reading.reason
+                .split(separator: "\n")
+                .first { $0.hasPrefix("Reset: ") }
+                .map { "reset \($0.replacingOccurrences(of: "Reset: ", with: ""))" }
+
+            return [duration, reset]
+                .compactMap { $0 }
+                .joined(separator: " · ")
         case .warning:
             return nil
         }

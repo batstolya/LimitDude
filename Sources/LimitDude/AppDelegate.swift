@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var demoTimers: [Timer] = []
     private var taskWatchEnabled = true
     private var isCheckingLimits = false
+    private var latestLimitReading: LimitReading?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if ReadmeAssetRenderer.renderIfRequested() {
@@ -158,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.isCheckingLimits = false
+                self.latestLimitReading = reading
                 self.handle(reading)
             }
         }
@@ -225,6 +227,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showDude() {
         log("showDude")
         let reading = provider.read()
+        latestLimitReading = reading
         updateStatus(reading)
         showManualDude(for: reading)
     }
@@ -232,6 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showWarningDude() {
         log("showWarningDude")
         let reading = provider.read()
+        latestLimitReading = reading
         updateStatus(reading)
         showManualDude(for: reading)
     }
@@ -279,7 +283,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {
-        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))")
+        let resetLine = latestLimitReading?.resetText.map { "\nReset: \($0)" } ?? ""
+        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))\(resetLine)")
         updateStatus(reading)
         log("showTaskDoneOverlay \(completion.id)")
         overlay.show(mode: .recovery(reading), showDetails: false, forceAttention: true)
