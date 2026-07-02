@@ -59,6 +59,14 @@ private func runChecks() {
     expect(monitor.ingest(.available()) == .none, "Repeated available reading must not trigger animation")
     expect(monitor.ingest(.unknown(reason: "Claude is closed")) == .none, "Unknown reading must not trigger animation")
 
+    let usageDropMonitor = LimitRecoveryMonitor()
+    expect(usageDropMonitor.ingest(LimitReading(state: .available, reason: "Left: 5h 25%, weekly 60%", usagePercent: 75)) == .none, "Initial high available usage must not trigger reset")
+    expect(
+        usageDropMonitor.ingest(LimitReading(state: .available, reason: "Left: 5h 75%, weekly 70%", usagePercent: 25)) == .recovery(.available(reason: "Limits reset. Left: 5h 75%, weekly 70%")),
+        "Large usage drop must trigger reset recovery animation"
+    )
+    expect(usageDropMonitor.ingest(LimitReading(state: .available, reason: "Left: 5h 76%, weekly 70%", usagePercent: 24)) == .none, "Repeated low usage must not trigger reset twice")
+
     let taskMonitor = CodexTaskMonitor(idleSecondsBeforeDone: 5, minimumActiveSecondsBeforeNotify: 0)
     let start = Date(timeIntervalSince1970: 100)
     let firstSnapshot = CodexTaskSnapshot(

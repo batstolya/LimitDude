@@ -152,7 +152,7 @@ public final class CodexRateLimitProvider: @unchecked Sendable {
             return .warning(reason: reason, usagePercent: busiest.usedPercent, resetText: resetText)
         }
 
-        return .available(reason: reason)
+        return LimitReading(state: .available, reason: reason, usagePercent: busiest.usedPercent, resetText: resetText)
     }
 
     private func codexSnapshot(from result: [String: Any]) -> [String: Any] {

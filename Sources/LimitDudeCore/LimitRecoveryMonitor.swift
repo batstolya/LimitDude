@@ -9,6 +9,7 @@ public enum LimitDudeAction: Equatable {
 public final class LimitRecoveryMonitor {
     private var lastStableState: LimitState?
     private var lastWarningBand: Int?
+    private var lastUsagePercent: Int?
 
     public init() {}
 
@@ -19,9 +20,14 @@ public final class LimitRecoveryMonitor {
         }
 
         let previousState = lastStableState
+        let previousUsagePercent = lastUsagePercent
         lastStableState = reading.state
+        if let usagePercent = reading.usagePercent {
+            lastUsagePercent = usagePercent
+        }
 
-        if (previousState == .limited || previousState == .warning) && reading.state == .available {
+        if reading.state == .available,
+           previousState == .limited || previousState == .warning || didUsageReset(from: previousUsagePercent, to: reading.usagePercent) {
             lastWarningBand = nil
             return .recovery(.available(reason: "Limits reset. \(reading.reason)"))
         }
@@ -44,6 +50,13 @@ public final class LimitRecoveryMonitor {
         }
 
         return .none
+    }
+
+    private func didUsageReset(from previousUsagePercent: Int?, to currentUsagePercent: Int?) -> Bool {
+        guard let previousUsagePercent, let currentUsagePercent else { return false }
+        return previousUsagePercent >= 50
+            && currentUsagePercent <= 30
+            && previousUsagePercent - currentUsagePercent >= 40
     }
 
     private func warningBand(for reading: LimitReading) -> Int? {
