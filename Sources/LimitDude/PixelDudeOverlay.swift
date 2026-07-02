@@ -20,16 +20,19 @@ enum PixelDudeMode {
             if reading.reason.hasPrefix("Task done.") {
                 return "Codex is available"
             }
+            if reading.reason.hasPrefix("Limits reset.") {
+                return "Limits reset"
+            }
             return reading.codexLimitHeadline ?? "Codex done"
         case .warning(let reading):
             if reading.reason.hasPrefix("Simulation only:") {
                 return "Demo only"
             }
+            if let usagePercent = reading.usagePercent {
+                return "\(usagePercent)% used"
+            }
             if let headline = reading.codexLimitHeadline {
                 return headline
-            }
-            if let usagePercent = reading.usagePercent {
-                return "Codex \(usagePercent)%"
             }
             return "Limits soon"
         }
@@ -38,6 +41,12 @@ enum PixelDudeMode {
     var detailText: String {
         switch self {
         case .recovery(let reading):
+            if reading.reason.hasPrefix("Task done.") {
+                return reading.reason
+            }
+            if reading.reason.hasPrefix("Limits reset.") {
+                return reading.reason.replacingOccurrences(of: ". Left:", with: ".\nLeft:")
+            }
             if reading.reason.hasPrefix("Left:") {
                 return reading.reason.replacingOccurrences(of: ". Reset:", with: "\nReset:")
             }
@@ -677,7 +686,17 @@ final class PixelDudeView: NSView {
         }
 
         let rect = NSRect(x: origin.x, y: origin.y, width: width * reveal, height: height)
-        NSColor(calibratedWhite: 0.98, alpha: 0.97).setFill()
+        let isWarningBubble: Bool
+        if case .warning = mode {
+            isWarningBubble = true
+        } else {
+            isWarningBubble = false
+        }
+
+        let bubbleFill = isWarningBubble
+            ? NSColor(calibratedRed: 0.82, green: 0.08, blue: 0.10, alpha: 0.96)
+            : NSColor(calibratedWhite: 0.98, alpha: 0.97)
+        bubbleFill.setFill()
         rect.fill()
         NSColor.black.setStroke()
         let border = NSBezierPath(rect: rect)
@@ -692,7 +711,7 @@ final class PixelDudeView: NSView {
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedSystemFont(ofSize: isShowingDetails ? 12 : 14, weight: .bold),
-            .foregroundColor: NSColor.black,
+            .foregroundColor: isWarningBubble ? NSColor.white : NSColor.black,
             .paragraphStyle: paragraph
         ]
         let textRect = rect.insetBy(dx: 8, dy: 7)

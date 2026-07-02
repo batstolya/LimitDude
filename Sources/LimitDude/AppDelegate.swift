@@ -274,7 +274,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {
-        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))\n\(completion.title)")
+        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))")
         updateStatus(reading)
         log("showTaskDoneOverlay \(completion.id)")
         overlay.show(mode: .recovery(reading), showDetails: false, forceAttention: true)
