@@ -4,6 +4,7 @@ import LimitDudeMac
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let launcherOriginDefaultsKey = "LimitDudeLauncherOrigin"
     private let monitor = LimitRecoveryMonitor()
     private let taskMonitor = CodexTaskMonitor()
     private let provider = CodexRateLimitProvider()
@@ -99,12 +100,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard launcherWindow == nil, let screen = NSScreen.main else { return }
 
         let size = NSSize(width: 76, height: 34)
-        let frame = NSRect(
+        let origin = savedLauncherOrigin(size: size, screen: screen) ?? NSPoint(
             x: screen.visibleFrame.maxX - size.width - 18,
-            y: screen.visibleFrame.maxY - size.height - 8,
-            width: size.width,
-            height: size.height
+            y: screen.visibleFrame.maxY - size.height - 8
         )
+        let frame = NSRect(origin: origin, size: size)
 
         let window = NSWindow(
             contentRect: frame,
@@ -129,10 +129,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.target = self
         button.action = #selector(showDude)
         button.toolTip = "Show Codex Dude"
+        button.onPositionChanged = { [weak self] origin in
+            self?.saveLauncherOrigin(origin)
+        }
 
         window.contentView = button
         window.orderFrontRegardless()
         launcherWindow = window
+    }
+
+    private func savedLauncherOrigin(size: NSSize, screen: NSScreen) -> NSPoint? {
+        guard let dictionary = UserDefaults.standard.dictionary(forKey: launcherOriginDefaultsKey),
+              let x = dictionary["x"] as? Double,
+              let y = dictionary["y"] as? Double else {
+            return nil
+        }
+
+        let frame = screen.visibleFrame
+        return NSPoint(
+            x: min(max(CGFloat(x), frame.minX), frame.maxX - size.width),
+            y: min(max(CGFloat(y), frame.minY), frame.maxY - size.height)
+        )
+    }
+
+    private func saveLauncherOrigin(_ origin: NSPoint) {
+        UserDefaults.standard.set(
+            [
+                "x": Double(origin.x),
+                "y": Double(origin.y)
+            ],
+            forKey: launcherOriginDefaultsKey
+        )
     }
 
     private func schedulePolling() {
@@ -440,12 +467,12 @@ private final class DraggableLauncherButton: NSButton {
     private var windowFrameAtMouseDown: NSRect?
     private var didDrag = false
     private let dragThreshold: CGFloat = 3
+    var onPositionChanged: ((NSPoint) -> Void)?
 
     override func mouseDown(with event: NSEvent) {
         mouseDownLocationInWindow = event.locationInWindow
         windowFrameAtMouseDown = window?.frame
         didDrag = false
-        super.mouseDown(with: event)
     }
 
     override func mouseDragged(with event: NSEvent) {
@@ -467,7 +494,9 @@ private final class DraggableLauncherButton: NSButton {
             didDrag = true
         }
 
-        window.setFrameOrigin(clampedOrigin(origin, for: window))
+        let clampedOrigin = clampedOrigin(origin, for: window)
+        window.setFrameOrigin(clampedOrigin)
+        onPositionChanged?(clampedOrigin)
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -477,9 +506,12 @@ private final class DraggableLauncherButton: NSButton {
             didDrag = false
         }
 
-        guard didDrag else {
-            super.mouseUp(with: event)
-            return
+        if didDrag {
+            if let origin = window?.frame.origin {
+                onPositionChanged?(origin)
+            }
+        } else if isEnabled {
+            performClick(nil)
         }
     }
 
