@@ -35,7 +35,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "LimitDudeCoreChecks",
-            dependencies: ["LimitDudeCore"]
+            dependencies: ["LimitDudeCore", "LimitDudeMac"]
         )
     ]
 )

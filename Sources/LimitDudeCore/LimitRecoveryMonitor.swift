@@ -32,6 +32,14 @@ public final class LimitRecoveryMonitor {
             return .recovery(.available(reason: "Limits reset. \(reading.reason)"))
         }
 
+        if reading.state == .limited {
+            lastWarningBand = nil
+            guard previousState != .limited else {
+                return .none
+            }
+            return .warning(reading)
+        }
+
         if reading.state == .warning {
             let currentBand = warningBand(for: reading)
             defer {

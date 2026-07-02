@@ -28,6 +28,12 @@ enum PixelDudeMode {
             if reading.reason.hasPrefix("Simulation only:") {
                 return "Demo only"
             }
+            if reading.state == .limited {
+                if let resetText = reading.resetText {
+                    return "Out · \(resetText)"
+                }
+                return "Codex is out"
+            }
             if let usagePercent = reading.usagePercent {
                 return "\(usagePercent)% used"
             }
@@ -59,6 +65,12 @@ enum PixelDudeMode {
             return "Codex is available."
         case .warning(let reading):
             if reading.reason.hasPrefix("Simulation only:") {
+                return reading.reason
+            }
+            if reading.state == .limited {
+                if let resetText = reading.resetText {
+                    return "\(reading.reason)\nAvailable again in \(resetText)"
+                }
                 return reading.reason
             }
             if reading.reason.hasPrefix("Left:") {

@@ -71,7 +71,7 @@ public final class SetupStatusProvider: @unchecked Sendable {
                 title: "Codex login",
                 state: .missing,
                 detail: reading.reason,
-                action: "Open Codex.app and sign in, then run Setup Status again"
+                action: "Open Codex.app and sign in, then run Connection Setup again"
             )
         }
     }

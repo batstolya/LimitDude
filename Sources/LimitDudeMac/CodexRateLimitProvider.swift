@@ -6,6 +6,10 @@ public final class CodexRateLimitProvider: @unchecked Sendable {
 
     public init() {}
 
+    public static func reading(fromRateLimitResult result: [String: Any]) -> LimitReading {
+        CodexRateLimitProvider().classify(result: result)
+    }
+
     public func read() -> LimitReading {
         guard FileManager.default.isExecutableFile(atPath: codexPath) else {
             return .unknown(reason: "Codex CLI was not found inside Codex.app")
@@ -137,17 +141,25 @@ public final class CodexRateLimitProvider: @unchecked Sendable {
         let busiest = windows.max { $0.usedPercent < $1.usedPercent }
         let resetText = busiest.flatMap { formatReset(epochSeconds: $0.resetsAt) }
 
-        if let reachedType {
-            return .limited(reason: "Codex limit reached: \(reachedType)", resetText: resetText)
-        }
-
         guard let busiest else {
+            if let reachedType {
+                return .limited(reason: "Codex limits exhausted: \(reachedType)")
+            }
             return .available(reason: "Codex rate limit bucket is readable")
         }
 
         let reason = resetText.map {
             "Left: \(remainingSummary(primary: primary, secondary: secondary)). Reset: \($0)"
         } ?? "Left: \(remainingSummary(primary: primary, secondary: secondary))"
+
+        if reachedType != nil || busiest.usedPercent >= 100 {
+            return .limited(
+                reason: "Codex limits exhausted. \(reason)",
+                usagePercent: busiest.usedPercent,
+                resetText: resetText
+            )
+        }
+
         if busiest.usedPercent >= 80 {
             return .warning(reason: reason, usagePercent: busiest.usedPercent, resetText: resetText)
         }

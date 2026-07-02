@@ -33,8 +33,8 @@ public struct LimitReading: Equatable, Sendable {
         LimitReading(state: .warning, reason: reason, usagePercent: usagePercent, resetText: resetText)
     }
 
-    public static func limited(reason: String = "Claude limit text detected", resetText: String? = nil) -> LimitReading {
-        LimitReading(state: .limited, reason: reason, resetText: resetText)
+    public static func limited(reason: String = "Claude limit text detected", usagePercent: Int? = nil, resetText: String? = nil) -> LimitReading {
+        LimitReading(state: .limited, reason: reason, usagePercent: usagePercent, resetText: resetText)
     }
 
     public static func available(reason: String = "Claude text readable") -> LimitReading {

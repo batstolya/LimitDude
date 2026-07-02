@@ -164,7 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func schedulePolling() {
-        let timer = Timer(timeInterval: 60, target: self, selector: #selector(checkNow), userInfo: nil, repeats: true)
+        let timer = Timer(timeInterval: 15, target: self, selector: #selector(checkNow), userInfo: nil, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
         pollTimer = timer
 
@@ -334,7 +334,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {
         let resetLine = latestLimitReading?.resetText.map { "\nReset: \($0)" } ?? ""
-        let reading = LimitReading.available(reason: "Task done. Можно кодить дальше.\nDuration: \(formatDuration(completion.duration))\(resetLine)")
+        let reading = LimitReading.available(reason: "Task done. Codex is ready again.\nDuration: \(formatDuration(completion.duration))\(resetLine)")
         updateStatus(reading)
         log("showTaskDoneOverlay \(completion.id)")
         overlay.show(mode: .recovery(reading), showDetails: false, forceAttention: true)

@@ -1,5 +1,6 @@
 import Foundation
 import LimitDudeCore
+import LimitDudeMac
 
 private var failures: [String] = []
 
@@ -62,11 +63,36 @@ private func runChecks() {
     expect(monitor.ingest(.warning(usagePercent: 96, resetText: "7:00 PM")) == .warning(.warning(usagePercent: 96, resetText: "7:00 PM")), "Crossing the critical warning band must trigger warning animation")
     expect(monitor.ingest(.warning(usagePercent: 99, resetText: "7:00 PM")) == .warning(.warning(usagePercent: 99, resetText: "7:00 PM")), "Crossing the final warning band must trigger warning animation")
     expect(monitor.ingest(.available(reason: "Left: 5h 100%, weekly 100%")) == .recovery(.available(reason: "Limits reset. Left: 5h 100%, weekly 100%")), "Warning to available transition must trigger reset recovery animation")
-    expect(monitor.ingest(.limited()) == .none, "Initial limited reading must not trigger animation")
+    expect(monitor.ingest(.limited()) == .warning(.limited()), "Initial limited reading must trigger exhausted-limits animation")
     expect(monitor.ingest(.limited()) == .none, "Repeated limited reading must not trigger animation")
     expect(monitor.ingest(.available()) == .recovery(.available(reason: "Limits reset. Claude text readable")), "Limited to available transition must trigger recovery animation")
     expect(monitor.ingest(.available()) == .none, "Repeated available reading must not trigger animation")
     expect(monitor.ingest(.unknown(reason: "Claude is closed")) == .none, "Unknown reading must not trigger animation")
+
+    let exhaustionMonitor = LimitRecoveryMonitor()
+    expect(exhaustionMonitor.ingest(.warning(usagePercent: 90, resetText: "1h 8m")) == .warning(.warning(usagePercent: 90, resetText: "1h 8m")), "Initial warning before exhaustion should notify")
+    expect(
+        exhaustionMonitor.ingest(.limited(reason: "Codex limits exhausted. Left: 5h 0%, weekly 9%. Reset: 1h 8m", resetText: "1h 8m")) == .warning(.limited(reason: "Codex limits exhausted. Left: 5h 0%, weekly 9%. Reset: 1h 8m", resetText: "1h 8m")),
+        "Warning to limited transition must show the exhausted-limits overlay"
+    )
+    expect(exhaustionMonitor.ingest(.limited(reason: "Codex limits exhausted. Left: 5h 0%, weekly 9%. Reset: 1h 8m", resetText: "1h 8m")) == .none, "Repeated limited reading must not notify again")
+
+    let exhaustedCodexReading = CodexRateLimitProvider.reading(fromRateLimitResult: [
+        "rateLimitsByLimitId": [
+            "codex": [
+                "rateLimitReachedType": "primary",
+                "primary": [
+                    "usedPercent": 100
+                ],
+                "secondary": [
+                    "usedPercent": 91
+                ]
+            ]
+        ]
+    ])
+    expect(exhaustedCodexReading.state == .limited, "Reached Codex limit must classify as limited")
+    expect(exhaustedCodexReading.reason.contains("Left: 5h 0%, weekly 9%"), "Reached Codex limit should show zero remaining primary bucket")
+    expect(exhaustedCodexReading.usagePercent == 100, "Reached Codex limit should preserve 100 percent used")
 
     let usageDropMonitor = LimitRecoveryMonitor()
     expect(usageDropMonitor.ingest(LimitReading(state: .available, reason: "Left: 5h 25%, weekly 60%", usagePercent: 75)) == .none, "Initial high available usage must not trigger reset")
