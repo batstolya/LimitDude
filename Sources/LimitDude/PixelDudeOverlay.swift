@@ -743,6 +743,7 @@ final class PixelDudeView: NSView {
 
         let attributed = NSMutableAttributedString(string: text, attributes: attributes)
         let pattern = #"(\d{1,3})%"#
+        let usesUsagePercent = onWarningBubble && text.localizedCaseInsensitiveContains("used")
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
         let fullRange = NSRange(location: 0, length: attributed.length)
         regex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
@@ -754,7 +755,9 @@ final class PixelDudeView: NSView {
 
             attributed.addAttribute(
                 .foregroundColor,
-                value: color(for: RemainingLimitTone.tone(forRemainingPercent: percent), onWarningBubble: onWarningBubble),
+                value: usesUsagePercent
+                    ? NSColor.white
+                    : color(for: RemainingLimitTone.tone(forRemainingPercent: percent), onWarningBubble: onWarningBubble),
                 range: match.range
             )
         }
