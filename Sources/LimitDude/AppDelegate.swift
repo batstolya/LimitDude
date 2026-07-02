@@ -87,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Simulate Task Done", action: #selector(simulateTaskDone), keyEquivalent: "g"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Simulate 80% Warning", action: #selector(simulateWarning), keyEquivalent: "8"))
+        menu.addItem(NSMenuItem(title: "Simulate 90% Warning", action: #selector(simulateNinetyWarning), keyEquivalent: "9"))
         menu.addItem(NSMenuItem(title: "Simulate Limited", action: #selector(simulateLimited), keyEquivalent: "l"))
         menu.addItem(NSMenuItem(title: "Simulate Reset", action: #selector(simulateReset), keyEquivalent: "a"))
         menu.addItem(.separator())
@@ -239,7 +240,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func simulateWarning() {
         log("simulateWarning")
-        let reading = LimitReading.warning(reason: "Simulation only: Codex limits are near 80%", usagePercent: nil, resetText: nil)
+        let reading = LimitReading.warning(reason: "Simulation only: Codex limits are near 80%", usagePercent: 80, resetText: nil)
+        updateStatus(reading)
+        overlay.show(mode: .warning(reading))
+    }
+
+    @objc private func simulateNinetyWarning() {
+        log("simulateNinetyWarning")
+        let reading = LimitReading.warning(reason: "Simulation only: Codex limits are near 90%", usagePercent: 90, resetText: nil)
         updateStatus(reading)
         overlay.show(mode: .warning(reading))
     }
