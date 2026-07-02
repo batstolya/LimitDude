@@ -715,16 +715,21 @@ final class PixelDudeView: NSView {
             .paragraphStyle: paragraph
         ]
         let textRect = rect.insetBy(dx: 8, dy: 7)
-        if drawColoredLimitTextIfNeeded(text, in: textRect, attributes: attributes) {
+        if drawColoredLimitTextIfNeeded(text, in: textRect, attributes: attributes, onWarningBubble: isWarningBubble) {
             return
         }
 
         text.draw(in: textRect, withAttributes: attributes)
     }
 
-    private func drawColoredLimitTextIfNeeded(_ text: String, in rect: NSRect, attributes: [NSAttributedString.Key: Any]) -> Bool {
+    private func drawColoredLimitTextIfNeeded(
+        _ text: String,
+        in rect: NSRect,
+        attributes: [NSAttributedString.Key: Any],
+        onWarningBubble: Bool
+    ) -> Bool {
         guard text.contains("%"),
-              text.contains("Left:") || text.contains("Codex left:") || text.contains("Codex limits:") else {
+              onWarningBubble || text.contains("Left:") || text.contains("Codex left:") || text.contains("Codex limits:") else {
             return false
         }
 
@@ -739,21 +744,32 @@ final class PixelDudeView: NSView {
                 return
             }
 
-            attributed.addAttribute(.foregroundColor, value: color(for: RemainingLimitTone.tone(forRemainingPercent: percent)), range: match.range)
+            attributed.addAttribute(
+                .foregroundColor,
+                value: color(for: RemainingLimitTone.tone(forRemainingPercent: percent), onWarningBubble: onWarningBubble),
+                range: match.range
+            )
         }
 
         attributed.draw(in: rect)
         return true
     }
 
-    private func color(for tone: RemainingLimitTone) -> NSColor {
+    private func color(for tone: RemainingLimitTone, onWarningBubble: Bool) -> NSColor {
         switch tone {
         case .critical:
+            if onWarningBubble {
+                return NSColor.white
+            }
             return NSColor(calibratedRed: 0.86, green: 0.12, blue: 0.10, alpha: 1)
         case .caution:
-            return NSColor(calibratedRed: 0.86, green: 0.58, blue: 0.05, alpha: 1)
+            return onWarningBubble
+                ? NSColor(calibratedRed: 1.0, green: 0.86, blue: 0.24, alpha: 1)
+                : NSColor(calibratedRed: 0.86, green: 0.58, blue: 0.05, alpha: 1)
         case .healthy:
-            return NSColor(calibratedRed: 0.06, green: 0.52, blue: 0.20, alpha: 1)
+            return onWarningBubble
+                ? NSColor(calibratedRed: 0.45, green: 1.0, blue: 0.58, alpha: 1)
+                : NSColor(calibratedRed: 0.06, green: 0.52, blue: 0.20, alpha: 1)
         }
     }
 
