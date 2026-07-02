@@ -61,7 +61,7 @@ Because this is an unsigned local build, macOS may ask you to allow it in **Syst
 - [x] Native macOS menu bar item.
 - [x] Manual **Check Codex Now** action.
 - [x] Manual overlay demos for task done, warnings, limited state, and reset.
-- [x] **Setup Status** diagnostics for new Macs.
+- [x] **Connection Setup** diagnostics for new Macs.
 - [ ] Add a signed and notarized release flow.
 - [ ] Add a Homebrew cask once releases are stable.
 
@@ -135,6 +135,8 @@ The overlay is a transparent borderless AppKit window drawn by `PixelDudeView`. 
 
 LimitDude runs locally on your Mac. It does not use external services.
 
+For Codex limits, LimitDude uses the local session from your installed Codex.app. It does not ask for your password or API key. Open Codex.app, sign in there, then use **Connection Setup** from the LimitDude menu to verify that limits are readable.
+
 It expects Codex.app to be installed at:
 
 ```text
@@ -149,7 +151,7 @@ The task watcher reads local Codex state from:
 
 ## Troubleshooting
 
-If the menu bar item appears but no useful status shows up, open **Setup Status** from the LimitDude menu. It checks whether Codex is installed where LimitDude expects it and whether the local Codex state file is available.
+If the menu bar item appears but no useful status shows up, open **Connection Setup** from the LimitDude menu. It checks whether Codex is installed where LimitDude expects it, whether your local Codex session can read rate limits, and whether the local Codex state file is available.
 
 If macOS blocks launch, open **System Settings -> Privacy & Security** and allow the unsigned app build.
 

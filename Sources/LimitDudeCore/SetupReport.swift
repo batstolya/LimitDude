@@ -50,4 +50,21 @@ public struct SetupReport: Equatable {
         }
         .joined(separator: "\n\n")
     }
+
+    public var connectionSummary: String {
+        """
+        LimitDude uses your local Codex.app session to read Codex limits. It never asks for your password or API key.
+
+        To connect Codex:
+        1. Install and open Codex.app.
+        2. Sign in to Codex with your own account.
+        3. Run Connection Setup again.
+
+        Claude Desktop checks are optional and use macOS Accessibility to read visible Claude window text. They are approximate, not an official Claude limits API.
+        """
+    }
+
+    public var setupText: String {
+        "\(connectionSummary)\n\n\(plainText)"
+    }
 }

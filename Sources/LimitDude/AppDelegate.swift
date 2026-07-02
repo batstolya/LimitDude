@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(details)
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Setup Status", action: #selector(showSetupStatus), keyEquivalent: "s"))
+        menu.addItem(NSMenuItem(title: "Connection Setup", action: #selector(showSetupStatus), keyEquivalent: "s"))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Check Codex Now", action: #selector(checkNow), keyEquivalent: "r"))
         menu.addItem(NSMenuItem(title: "Show Dude", action: #selector(showDude), keyEquivalent: "d"))
@@ -310,11 +310,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func presentSetupReport(_ report: SetupReport) {
         let alert = NSAlert()
-        alert.messageText = report.hasMissingRequiredSetup ? "LimitDude setup needs attention" : "LimitDude setup looks ready"
-        alert.informativeText = report.plainText
+        alert.messageText = report.hasMissingRequiredSetup ? "LimitDude connection setup needs attention" : "LimitDude connection setup looks ready"
+        alert.informativeText = report.setupText
         alert.alertStyle = report.hasMissingRequiredSetup ? .warning : .informational
+        alert.addButton(withTitle: "Open Codex.app")
+        alert.addButton(withTitle: "Open Accessibility")
         alert.addButton(withTitle: "OK")
-        alert.runModal()
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            NSWorkspace.shared.openApplication(
+                at: URL(fileURLWithPath: "/Applications/Codex.app"),
+                configuration: NSWorkspace.OpenConfiguration()
+            )
+        case .alertSecondButtonReturn:
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
+        default:
+            break
+        }
     }
 
     private func showTaskDone(_ completion: CodexTaskCompletion) {

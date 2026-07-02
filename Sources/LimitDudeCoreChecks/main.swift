@@ -44,6 +44,14 @@ private func runChecks() {
         setupReport.plainText.contains("[MISSING] Codex login: Rate limits are not readable\nAction: Open Codex and sign in"),
         "Setup report should include missing check action"
     )
+    expect(
+        setupReport.connectionSummary.contains("LimitDude uses your local Codex.app session"),
+        "Setup report should explain the local Codex session model"
+    )
+    expect(
+        setupReport.connectionSummary.contains("never asks for your password or API key"),
+        "Setup report should explain that credentials are not collected"
+    )
 
     let monitor = LimitRecoveryMonitor()
     expect(monitor.ingest(.available()) == .none, "Initial available reading must not trigger animation")
