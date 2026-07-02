@@ -22,6 +22,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var isCheckingLimits = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if ReadmeAssetRenderer.renderIfRequested() {
+            NSApplication.shared.terminate(nil)
+            return
+        }
+
         log("applicationDidFinishLaunching")
         configureStatusItem()
         configureLauncherWindow()

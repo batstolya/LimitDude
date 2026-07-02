@@ -1,24 +1,43 @@
+<div align="center">
+
 # LimitDude
 
-Tiny macOS menu bar companion for Codex limits, long-running tasks, and the small emotional need to know when Codex is ready again.
+**A tiny macOS menu bar companion that watches Codex limits and tells you when Codex is ready again.**
 
-![LimitDude available overlay](docs/assets/limitdude-available.png)
+![Swift](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-13+-111111?style=flat-square&logo=apple&logoColor=white)
+![Local only](https://img.shields.io/badge/local-only-2E7D32?style=flat-square)
+![No services](https://img.shields.io/badge/external_services-none-546E7A?style=flat-square)
 
-## What It Does
+![LimitDude shows a pixel character holding a Codex is available sign after a task finishes](docs/assets/limitdude-task-done.gif)
 
-LimitDude watches Codex from the menu bar and shows a pixel character overlay when something needs attention.
+</div>
 
-- Checks Codex rate limits from the local Codex app-server protocol.
-- Shows current 5-hour and weekly remaining percentages.
-- Colors remaining percentages: red for low, yellow for medium, green for healthy.
-- Warns when Codex usage is near the limit.
-- Watches active Codex tasks and shows `Codex is available` when a long task finishes.
-- Ignores quick answers so short replies do not spam the screen.
-- Shows how long the last completed task ran.
-- Includes `Setup Status` to explain what is missing on a new Mac.
-- Provides menu actions for manual checks and demo overlays.
+LimitDude lives in your menu bar, quietly watches local Codex state, and pops up only when something deserves attention: a long task finished, your limits are getting tight, or the reset happened and you can work again.
 
-![LimitDude limit overlay](docs/assets/limitdude-limits.png)
+## Why It Exists
+
+Codex work often has a small awkward gap: you start a long task, switch away, and then keep wondering whether it finished or whether you are close to a limit. LimitDude turns that into a gentle local signal instead of another thing to babysit.
+
+## Highlights
+
+- Watches active Codex tasks and shows **Codex is available** when a long task finishes.
+- Checks current Codex rate limits from the local Codex app-server protocol.
+- Shows 5-hour and weekly remaining percentages.
+- Colors limit percentages red, yellow, or green so the state is scannable.
+- Warns when usage is getting close to the edge.
+- Detects reset/recovery moments and shows a friendly overlay.
+- Ignores quick answers so the screen does not get noisy.
+- Includes **Setup Status** for explaining what is missing on a new Mac.
+- Runs locally and does not talk to external services.
+
+## Demo
+
+| Task finished | Limit warning |
+| --- | --- |
+| ![LimitDude task done overlay animation](docs/assets/limitdude-task-done.gif) | ![LimitDude warning overlay animation with remaining limit percentages](docs/assets/limitdude-limits.gif) |
+
+The README animations are rendered from the same `PixelDudeView` code used by the app, so the GIFs stay in sync with the real overlay.
 
 ## Install Locally
 
@@ -28,15 +47,15 @@ Build the macOS app bundle:
 scripts/build-app.sh
 ```
 
-Then install it:
+Open the build output:
 
 ```bash
 open dist
 ```
 
-Drag `LimitDude.app` into `/Applications`, or run it directly from `dist/`.
+Then drag `LimitDude.app` into `/Applications`, or run it directly from `dist/`.
 
-This is a local unsigned build. macOS may ask you to allow it in System Settings -> Privacy & Security the first time you open it.
+LimitDude is currently an unsigned local build. The first launch may require approval in **System Settings -> Privacy & Security**.
 
 ## Developer Commands
 
@@ -64,13 +83,35 @@ Check Codex limits once:
 swift run LimitDudeCodexCheck
 ```
 
-Show the task-done overlay demo:
+Show a task-done overlay demo:
 
 ```bash
 swift run LimitDude --demo-task-done
 ```
 
-## Notes
+Show a warning overlay demo:
+
+```bash
+swift run LimitDude --demo-warning --demo-click
+```
+
+Regenerate README GIF assets:
+
+```bash
+swift run LimitDude --render-readme-assets
+```
+
+## How It Works
+
+LimitDude uses a small Swift Package with three main pieces:
+
+- `LimitDudeCore` models limit readings, reset/recovery detection, and task completion filtering.
+- `LimitDudeMac` reads local Codex app and task state from macOS.
+- `LimitDude` owns the menu bar app, overlay window, demo modes, and README asset renderer.
+
+The overlay is a borderless AppKit window drawn by `PixelDudeView`. It has the same entrance, idle, warning, detail, and task-done animation whether it appears in the app or in the generated README GIFs.
+
+## Local State
 
 LimitDude expects Codex.app to be installed at:
 
@@ -85,3 +126,9 @@ The task watcher reads local Codex state from:
 ```
 
 No external services are used by LimitDude itself.
+
+## Troubleshooting
+
+If the menu bar item appears but no useful status shows up, open **Setup Status** from the LimitDude menu. It checks whether Codex is installed where LimitDude expects it and whether the local Codex state file is available.
+
+If macOS blocks launch, open **System Settings -> Privacy & Security** and allow the unsigned app build.
